@@ -3,18 +3,25 @@ library(shiny)
 library(ggplot2)
 library(tidyverse)
 library(shinydashboard)
+library(leaflet)
 
-dengue_data <- read.csv("dengue_final.csv")
+dengue <- read_csv('Data/dengue_final.csv')
 
 #create shiny app
-ui <- function{
+ui <- dashboardPage(
+    dashboardHeader(title = "Dengue Fever in Singapore"),
 
-    
 
+)
+
+
+server <- function(input, output) {
+    output$map <- renderLeaflet({
+        leaflet(dengue_data) %>%
+            addTiles() %>%
+            
+    })
 }
 
-server <- function{
 
-}
-
-shinyApp(ui, server)
+shinyApp(ui = ui, server = server)
