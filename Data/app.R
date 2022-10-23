@@ -12,6 +12,7 @@ for (p in packages) {
 
 #Read the data
 dengue <- read_csv("Data/dengue_final.csv")
+str(dengue)
 
 # read the subzone data and shapefile
 
