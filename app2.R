@@ -22,10 +22,13 @@ ui <- bootstrapPage(
   leafletOutput("map", width = "100%", height = "100%"),
   absolutePanel(top = 10, right = 10,
                 sliderInput("range", "Number Of Dengue Cases", min(dengue$NumberofCases), max(dengue$NumberofCases),
-                            value = range(dengue$NumberofCases), step = 5
+                            value = range(dengue$NumberofCases), step = 1
                 ),
                 selectInput("colors", "Color Scheme",
                             rownames(subset(brewer.pal.info, category %in% c("seq", "div")))
+                ),
+                sliderInput("daterange", "Date Range", min(dengue$Date),max(dengue$Date),
+                            value = range(dengue$Date), step = 1
                 ),
                 checkboxInput("legend", "Show legend", TRUE)
   )
@@ -36,7 +39,15 @@ server <- function(input, output, session) {
   
   # Reactive expression for the data subsetted to what the user selected
   filteredData <- reactive({
-    dengue[dengue$NumberofCases >= input$range[1] & dengue$NumberofCases <= input$range[2],]
+    # dengue %>%
+    #   filter(NumberofCases == between(NumberofCases, input$range[1], input$range[2]),
+    #          Date == between(Date, input$daterange[1], input$daterange[2]))
+    
+    dengue <- filter(dengue, between(NumberofCases,input$range[1], input$range[2]),
+                     between(Date, input$daterange[1], input$daterange[2]))
+                                         
+    # dengue[dengue$NumberofCases >= input$range[1] & dengue$NumberofCases <= input$range[2],
+    #        dengue$Date >= input$daterange[1] & dengue$Date <= input$daterange[2],]
   })
   
   # This reactive expression represents the palette function,
