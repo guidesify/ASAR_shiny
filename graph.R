@@ -1,7 +1,7 @@
 # Load required packages
 packages <- c("shiny",  "ggplot2",  "tidyverse",  "shinydashboard",  "leaflet",
               "magrittr", "lubridate", "reshape", "tidyverse", "DT",  "knitr", 
-              "corrplot", "sf", "tmap", "rgdal", "htmlwidgets", "terra")
+              "corrplot", "sf", "tmap", "rgdal", "htmlwidgets", "terra","plotly")
 
 for (p in packages) {
     if (!require(p,  character.only = TRUE)) {
@@ -47,7 +47,7 @@ ui <- fluidPage(
     ),
         mainPanel(
             # Plot the graph by DateYMD
-            plotOutput("plot1", height = 500, width = 1000)
+            plotlyOutput("plot1"),
         )
     )
 )
@@ -64,24 +64,27 @@ server <- function(input, output, session) {
 
 
     # Plot graph based on selection and sum up the cases by DateYMD
-    output$plot1 <- renderPlot({
+    output$plot1 <- renderPlotly({
         if (input$show == "Recent Cases") {
-            ggplot(dengue_filtered(), aes(x = Date, y = RecentCasesinCluster)) +
-                geom_bar(stat = "identity", fill = "blue", na.rm = TRUE) +
+            p <- ggplot(dengue_filtered(), aes(x = Date, y = RecentCasesinCluster)) +
+                geom_bar(stat = "identity", fill = "#6e2a25", na.rm = TRUE) +
                 labs(x = "Date", y = "Number of Cases", title = "Recent Dengue Cases") +
                 theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
                 scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
                 theme(plot.title = element_text(hjust = 0.5))
         } else {
-            ggplot(dengue_filtered(), aes(x = Date, y = TotalCasesinCluster)) +
-                geom_bar(stat = "identity", fill = "blue", na.rm = TRUE) +
+            p <- ggplot(dengue_filtered(), aes(x = Date, y = TotalCasesinCluster)) +
+                geom_bar(stat = "identity", fill = "#2e0303", na.rm = TRUE) +
                 labs(x = "Date", y = "Number of Cases", title = "Total Dengue Cases") +
                 theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
                 scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
                 theme(plot.title = element_text(hjust = 0.5))
         }
+        ggplotly(p)
     })
+
 }
+
 
 shinyApp(ui, server)
 
