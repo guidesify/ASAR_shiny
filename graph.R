@@ -15,9 +15,6 @@ dengue <- read_csv("Data/dengue_final.csv")
 
 names(dengue) <- gsub(" ", "", names(dengue))
 dengue$Date <- as.Date(dengue$Date, format = "%d/%m/%Y")
-# dengue$DateYMD <- as.Date(dengue$Date, format = "%Y-%m-%d")
-# dengue$DateYMD <- as.character(dengue$DateYMD)
-# dengue$NumberofCases <- as.numeric(dengue$NumberofCases)
 dengue$RecentCasesinCluster <- as.numeric(dengue$RecentCasesinCluster)
 dengue$TotalCasesinCluster <- as.numeric(dengue$TotalCasesinCluster)
 dengue$ClusterNumber <- as.numeric(dengue$ClusterNumber)
@@ -37,7 +34,7 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
             selectInput("show", "Show", 
-                        choices = c("Recent Cases", "Total Cases"), 
+                        choices = c("Recent Cases", "Total Cases", "Number of Active Clusters"),
                         selected = "Recent Cases"),
             dateRangeInput("date", "Date Range", 
                            start = "2019-01-01", end = "2019-12-31", 
@@ -63,80 +60,41 @@ server <- function(input, output, session) {
             })
 
 
-    # Plot graph based on selection and sum up the cases by DateYMD
+    # Plot graph based on selection and sum up the cases by Date, set tooltip to text
     output$plot1 <- renderPlotly({
         if (input$show == "Recent Cases") {
-            p <- ggplot(dengue_filtered(), aes(x = Date, y = RecentCasesinCluster)) +
+            p <- dengue_filtered() %>%
+                group_by(Date) %>%
+                summarise(RecentCasesinCluster = sum(RecentCasesinCluster)) %>%
+                ggplot(., aes(x = Date, y = RecentCasesinCluster, text = paste("Date:", Date, "<br>Recent Cases:", RecentCasesinCluster))) +
                 geom_bar(stat = "identity", fill = "#6e2a25", na.rm = TRUE) +
                 labs(x = "Date", y = "Number of Cases", title = "Recent Dengue Cases") +
                 theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
                 scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
                 theme(plot.title = element_text(hjust = 0.5))
-        } else {
-            p <- ggplot(dengue_filtered(), aes(x = Date, y = TotalCasesinCluster)) +
+        } else if (input$show == "Total Cases") {
+            p <- dengue_filtered() %>%
+                group_by(Date) %>%
+                summarise(TotalCasesinCluster = sum(TotalCasesinCluster)) %>%
+                ggplot(., aes(x = Date, y = TotalCasesinCluster, text = paste("Date:", Date, "<br>Total Cases:", TotalCasesinCluster))) +
                 geom_bar(stat = "identity", fill = "#2e0303", na.rm = TRUE) +
                 labs(x = "Date", y = "Number of Cases", title = "Total Dengue Cases") +
                 theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
                 scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
                 theme(plot.title = element_text(hjust = 0.5))
+        } else {
+            p <- dengue_filtered() %>%
+                group_by(Date) %>%
+                summarise(ActiveClusters = n_distinct(ClusterNumber)) %>%
+                ggplot(., aes(x = Date, y = ActiveClusters, text = paste("Date:", Date, "<br>No. of Active Clusters:", ActiveClusters))) +
+                geom_bar(stat = "identity", fill = "#ca7b04", na.rm = TRUE) +
+                labs(x = "Date", y = "Number of Active Clusters", title = "Number of Active Clusters") +
+                theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+                scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
+                theme(plot.title = element_text(hjust = 0.5))
         }
-        ggplotly(p)
+        ggplotly(p, tooltip = c("text"))
     })
-
 }
 
-
 shinyApp(ui, server)
-
-
-
-
-
-# ui <- fluidPage(
-
-#     titlePanel("Dengue Dashboard"),
-
-#     # Main panel for displaying dengue weekly cases with daterange slider
-#     mainPanel(
-#         sidebarLayout(
-#             sidebarPanel(
-#                 dateRangeInput("daterange", "Date range:",
-#                                start = "2015-01-01", end = "2022-12-31",
-#                                format = "yyyy-mm-dd")
-#             ),
-#             mainPanel(
-#                 plotOutput("dengue_weekly_cases")
-#             )
-#         )
-#     )
-# )
-
-
-
-# server <- function(input, output, session) { # nolint
-
-#     # Create reactive expression to filter dengue weekly cases by date range
-#     dengue_weekly_cases <- reactive({
-#         dengue_week %>%
-#             filter(Date >= input$daterange[1] & Date <= input$daterange[2])
-#     })
-
-#     # Plot dengue weekly cases
-#     output$dengue_weekly_cases <- renderPlot({
-#         ggplot(dengue_weekly_cases(), aes(x = Date, y = NumberofCases)) +
-#             geom_line() +
-#             labs(x = "Date", y = "Number of Cases") +
-#             theme_minimal()
-#     })
-# }
-    
-
-# shinyApp(ui = ui, server = server)
-
-
-# Create a data frame with the number of cases per week
-# dengue_week <- dengue %>%
-#     group_by(Date) %>%
-#     summarise(NumberofCases = sum(NumberofCases))
-
-            # filter(grepl(input$address, StreetAddress, ignore.case = TRUE) | input$address == "")
