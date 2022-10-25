@@ -40,7 +40,39 @@ ui <- fluidPage(
                            start = "2019-01-01", end = "2019-12-31", 
                            format = "yyyy-mm-dd", 
                            min = "2015-01-01", max = "2022-12-31"),
-            textInput("location", "Location", "Yishun")
+            # We can only allow 1 select input to be selected at a time
+            selectInput("filterby", "Filter by:", 
+                        choices = c("Subzone", "Planning Area", "Region","Land Use","Search by Address"),
+                        selected = "Subzone"),
+            # Create a select input based on the filterby input
+            conditionalPanel(
+                condition = "input.filterby == 'Subzone'",
+                selectInput("subzone", "Subzone", 
+                            choices = c("ALL", unique(dengue$Subzone)),
+                            selected = "ALL")
+            ),
+            conditionalPanel(
+                condition = "input.filterby == 'Planning Area'",
+                selectInput("planningarea", "Planning Area", 
+                            choices = c("ALL", unique(dengue$PlanningArea)),
+                            selected = "ALL")
+            ),
+            conditionalPanel(
+                condition = "input.filterby == 'Region'",
+                selectInput("region", "Region", 
+                            choices = c("ALL", unique(dengue$Region)),
+                            selected = "ALL")
+            ),
+            conditionalPanel(
+                condition = "input.filterby == 'Land Use'",
+                selectInput("landuse", "Land Use", 
+                            choices = c("ALL", unique(dengue$LandUse)),
+                            selected = "ALL")
+            ),
+            conditionalPanel(
+                condition = "input.filterby == 'Search by Address'",
+                textInput("location", "Location", value = "")
+            )
     ),
         mainPanel(
             # Plot the graph by DateYMD
@@ -56,10 +88,20 @@ server <- function(input, output, session) {
     dengue_filtered <- reactive({
         dengue %>% 
             filter(Date >= input$date[1] & Date <= input$date[2]) %>%
-            filter(grepl(input$location, StreetAddress, ignore.case = TRUE) | input$location == "")
+            # filter by filterby selection
+            filter(if (input$filterby == "Subzone") {
+                Subzone == input$subzone | input$subzone == "ALL"
+            } else if (input$filterby == "Planning Area") {
+                PlanningArea == input$planningarea | input$planningarea == "ALL"
+            } else if (input$filterby == "Region") {
+                Region == input$region | input$region == "ALL"
+            } else if (input$filterby == "Land Use") {
+                LandUse == input$landuse | input$landuse == "ALL"
+            } else if (input$filterby == "Search by Address") {
+                grepl(input$location, StreetAddress, ignore.case = TRUE) | input$location == ""
             })
-
-
+    })
+    
     # Plot graph based on selection and sum up the cases by Date, set tooltip to text
     output$plot1 <- renderPlotly({
         if (input$show == "Recent Cases") {
