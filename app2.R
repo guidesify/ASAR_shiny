@@ -17,6 +17,13 @@ names(dengue) <- gsub(" ", "", names(dengue))
 dengue$Date <- as.Date(dengue$Date, format = "%d/%m/%Y")
 str(dengue)
 
+#Read planning area shapefile 
+
+planning_area <- readOGR('Data/','URA_MP19_PLNG_AREA_PL')
+ogrInfo("Data/", 'URA_MP19_PLNG_AREA_PL')
+planning_area_shape <- spTransform(planning_area, CRS("+proj=longlat +datum=WGS84"))
+
+
 ui <- bootstrapPage(
   tags$style(type = "text/css", "html, body {width:100%;height:100%}"),
   leafletOutput("map", width = "100%", height = "100%"),
@@ -72,7 +79,10 @@ server <- function(input, output, session) {
     pal <- colorpal()
     
     leafletProxy("map", data = filteredData()) %>%
-      clearShapes() %>%
+      clearShapes() %>% addPolygons(data=planning_area_shape, layerId=~PLN_AREA_N, weight=2,col = 'black',highlight = highlightOptions(weight = 5,
+                                                                                                           color = "red",
+                                                                                                           fillOpacity = 0.7,
+                                                                                                           bringToFront = TRUE),label=~PLN_AREA_N) %>%
       addCircles(radius = ~NumberofCases/10, weight = 1, color = "#777777",
                  fillColor = ~pal(NumberofCases), fillOpacity = 0.7, popup = ~paste(NumberofCases)
       )
@@ -91,6 +101,11 @@ server <- function(input, output, session) {
                           pal = pal, values = ~NumberofCases
       )
     }
+  })
+  
+  observeEvent(input$map_shape_click, { # update the location selectInput on map clicks
+    p <- input$map_shape_click
+    print(p)
   })
   
   observeEvent(input$close, {
