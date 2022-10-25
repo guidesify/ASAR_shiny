@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # API Keys passwords etc.
 .env
+
+# Large files
+Data/G_MP19_LAND_USE_PL.geojson
