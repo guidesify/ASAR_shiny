@@ -65,9 +65,9 @@ server <- function(input, output, session) {
   
   # This reactive expression represents the palette function,
   # which changes as the user makes selections in UI.
-  colorpal <- reactive({
-    colorNumeric(input$colors, dengue$NumberofCases)
-  })
+  #colorpal <- reactive({
+  #  colorNumeric(input$colors, dengue$NumberofCases)
+  #})
   
   output$map <- renderLeaflet({
     # Use leaflet() here, and only include aspects of the map that
@@ -88,12 +88,12 @@ server <- function(input, output, session) {
   #})
   
   observe({
-    pal <- colorpal()
+    #pal <- colorpal()
     filtered_dengue <- filteredData()
     planning_area_cases <- sum(filtered_dengue$NumberofCases[filtered_dengue$PlanningArea==rv$planning_area])
     
     leafletProxy("map", data = filtered_dengue) %>%
-      clearShapes() %>% addPolygons(data=planning_area_shape, layerId=~PLN_AREA_N, 
+    clearShapes() %>% clearHeatmap()  %>% addPolygons(data=planning_area_shape, layerId=~PLN_AREA_N, 
                                                               weight=2,col = 'black',
                                                               highlight = highlightOptions(weight = 5,
                                                                 color = "red",
@@ -101,27 +101,30 @@ server <- function(input, output, session) {
                                                                 bringToFront = TRUE),
                                                               label=~PLN_AREA_N,
                                                               popup=~paste("Planning Area: ", PLN_AREA_N, "<br>",
-                                                                           "Number of Cases:", planning_area_cases)) %>%
-      addHeatmap(lng = ~Longitude, lat = ~Latitude, blur=20, radius=10)
+                                                                           "Number of Cases:", planning_area_cases), group="Planning Area") %>%
+      addHeatmap(lng = ~Longitude, lat = ~Latitude, blur=20, radius=10, minOpacity=0.5, group="Heatmap") %>%
+      addLayersControl(baseGroups = c("Planning Area", "Heatmap"), position = "bottomright", 
+                                      options = layersControlOptions(collapsed = FALSE))
       #addCircles(radius = ~NumberofCases/10, weight = 1, color = "#777777",
       #           fillColor = ~pal(NumberofCases), fillOpacity = 0.7, popup = ~paste(NumberofCases)
       #)
   })
   
   # Use a separate observer to recreate the legend as needed.
-  observe({
-    proxy <- leafletProxy("map", data = dengue)
+  #observe({
+  #  proxy <- leafletProxy("map", data = dengue)
     
     # Remove any existing legend, and only if the legend is
     # enabled, create a new one.
-    proxy %>% clearControls()
-    if (input$legend) {
-      pal <- colorpal()
-      proxy %>% addLegend(position = "bottomright",
-                          pal = pal, values = ~NumberofCases
-      )
-    }
-  })
+  #  proxy %>% clearControls()
+  #  if (input$legend) {
+  #    pal <- colorpal()
+  #    proxy %>% addLegend(position = "bottomright",
+  #                        pal = pal, values = ~NumberofCases
+  #    )
+  #  }
+  #})
+
   
   observeEvent(input$map_shape_click, {
     rv$planning_area <- input$map_shape_click$id
