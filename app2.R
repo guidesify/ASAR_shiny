@@ -21,8 +21,8 @@ str(dengue)
 
 #Read planning area shapefile 
 
-planning_area <- readOGR('Data/','URA_MP19_PLNG_AREA_PL')
-ogrInfo("Data/", 'URA_MP19_PLNG_AREA_PL')
+planning_area <- readOGR('Data/','MP14_PLNG_AREA_NO_SEA_PL')
+ogrInfo("Data/", 'MP14_PLNG_AREA_NO_SEA_PL')
 planning_area_shape <- spTransform(planning_area, CRS("+proj=longlat +datum=WGS84"))
 
 
