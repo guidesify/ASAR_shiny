@@ -26,23 +26,47 @@ ogrInfo("Data/", 'MP14_PLNG_AREA_NO_SEA_PL')
 planning_area_shape <- spTransform(planning_area, CRS("+proj=longlat +datum=WGS84"))
 
 
-ui <- bootstrapPage(
-  tags$style(type = "text/css", "html, body {width:100%;height:100%}"),
-  leafletOutput("map", width = "100%", height = "100%"),
-  absolutePanel(top = 10, right = 10,
-                sliderInput("range", "Number Of Dengue Cases", min(dengue$NumberofCases), max(dengue$NumberofCases),
-                            value = range(dengue$NumberofCases), step = 1
-                ),
-                selectInput("colors", "Color Scheme",
-                            rownames(subset(brewer.pal.info, category %in% c("seq", "div")))
-                ),
-                sliderInput("daterange", "Date Range", min(dengue$Date),max(dengue$Date),
-                            value = range(dengue$Date), step = 1
-                ),
-                checkboxInput("legend", "Show legend", TRUE)
-  )
+ui <- 
   
-)
+  dashboardPage(
+    dashboardHeader(),
+    sidebar <- dashboardSidebar(
+      sidebarMenu(
+        menuItem("Map", tabName="Map")
+      )
+    ),
+    dashboardBody(
+      tabItems(
+        tabItem(
+          tabName = 'Map', 
+          titlePanel('Map'),
+          tabsetPanel(
+          fluidRow(
+                    column(6,
+                      sliderInput("range", "Number Of Dengue Cases", min(dengue$NumberofCases), max(dengue$NumberofCases),
+                                 value = range(dengue$NumberofCases), step = 1
+                      )
+                    ),
+                    #selectInput("colors", "Color Scheme",
+                    #            rownames(subset(brewer.pal.info, category %in% c("seq", "div")))
+                    #),
+                    column(6,
+                      sliderInput("daterange", "Date Range", min(dengue$Date),max(dengue$Date),
+                                  value = range(dengue$Date), step = 1
+                      )
+                    )
+                    #checkboxInput("legend", "Show legend", TRUE)
+            ),
+            fluidRow(
+              tags$style(type = "text/css", "#map {height: calc(100vh - 220px) !important;}"),
+              leafletOutput("map"),
+            )
+          )
+        )
+      )
+    )
+  )
+
 
 server <- function(input, output, session) {
   
@@ -51,15 +75,10 @@ server <- function(input, output, session) {
   
   # Reactive expression for the data subsetted to what the user selected
   filteredData <- reactive({
-    # dengue %>%
-    #   filter(NumberofCases == between(NumberofCases, input$range[1], input$range[2]),
-    #          Date == between(Date, input$daterange[1], input$daterange[2]))
     
     dengue <- filter(dengue, between(NumberofCases,input$range[1], input$range[2]),
                      between(Date, input$daterange[1], input$daterange[2]))
                                          
-    # dengue[dengue$NumberofCases >= input$range[1] & dengue$NumberofCases <= input$range[2],
-    #        dengue$Date >= input$daterange[1] & dengue$Date <= input$daterange[2],]
   })
   
   
