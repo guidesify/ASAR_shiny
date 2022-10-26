@@ -1,7 +1,7 @@
 packages <- c("shiny",  "ggplot2",  "tidyverse",  "shinydashboard",  "leaflet",
               "magrittr", "lubridate", "reshape", "tidyverse", "DT",  "knitr", 
               "corrplot", "sf", "tmap", "rgdal", "htmlwidgets", "terra", "janitor",
-              "RColorBrewer")
+              "RColorBrewer", "leaflet.extras")
 
 for (p in packages) {
   if (!require(p,  character.only = TRUE)) {
@@ -12,7 +12,9 @@ for (p in packages) {
 
 #Read dengue data:
 dengue <- read_csv("Data/dengue_final.csv")
+
 #dengue <- clean_names()
+
 names(dengue) <- gsub(" ", "", names(dengue))
 dengue$Date <- as.Date(dengue$Date, format = "%d/%m/%Y")
 str(dengue)
@@ -44,6 +46,9 @@ ui <- bootstrapPage(
 
 server <- function(input, output, session) {
   
+  rv <- reactiveValues()
+  
+  
   # Reactive expression for the data subsetted to what the user selected
   filteredData <- reactive({
     # dengue %>%
@@ -56,6 +61,7 @@ server <- function(input, output, session) {
     # dengue[dengue$NumberofCases >= input$range[1] & dengue$NumberofCases <= input$range[2],
     #        dengue$Date >= input$daterange[1] & dengue$Date <= input$daterange[2],]
   })
+  
   
   # This reactive expression represents the palette function,
   # which changes as the user makes selections in UI.
@@ -75,17 +81,31 @@ server <- function(input, output, session) {
   # circles when a new color is chosen) should be performed in
   # an observer. Each independent set of things that can change
   # should be managed in its own observer.
+  
+  #sort_cases <- reactive({
+  #  print(sum(dengue$NumberofCases[dengue$PlanningArea==input$map_shape_click$id]))
+  #  sum(dengue$NumberofCases[dengue$PlanningArea==input$map_shape_click$id])
+  #})
+  
   observe({
     pal <- colorpal()
+    filtered_dengue <- filteredData()
+    planning_area_cases <- sum(filtered_dengue$NumberofCases[filtered_dengue$PlanningArea==rv$planning_area])
     
-    leafletProxy("map", data = filteredData()) %>%
-      clearShapes() %>% addPolygons(data=planning_area_shape, layerId=~PLN_AREA_N, weight=2,col = 'black',highlight = highlightOptions(weight = 5,
-                                                                                                           color = "red",
-                                                                                                           fillOpacity = 0.7,
-                                                                                                           bringToFront = TRUE),label=~PLN_AREA_N) %>%
-      addCircles(radius = ~NumberofCases/10, weight = 1, color = "#777777",
-                 fillColor = ~pal(NumberofCases), fillOpacity = 0.7, popup = ~paste(NumberofCases)
-      )
+    leafletProxy("map", data = filtered_dengue) %>%
+      clearShapes() %>% addPolygons(data=planning_area_shape, layerId=~PLN_AREA_N, 
+                                                              weight=2,col = 'black',
+                                                              highlight = highlightOptions(weight = 5,
+                                                                color = "red",
+                                                                fillOpacity = 0.7,
+                                                                bringToFront = TRUE),
+                                                              label=~PLN_AREA_N,
+                                                              popup=~paste("Planning Area: ", PLN_AREA_N, "<br>",
+                                                                           "Number of Cases:", planning_area_cases)) %>%
+      addHeatmap(lng = ~Longitude, lat = ~Latitude, blur=20, radius=10)
+      #addCircles(radius = ~NumberofCases/10, weight = 1, color = "#777777",
+      #           fillColor = ~pal(NumberofCases), fillOpacity = 0.7, popup = ~paste(NumberofCases)
+      #)
   })
   
   # Use a separate observer to recreate the legend as needed.
@@ -103,10 +123,11 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(input$map_shape_click, { # update the location selectInput on map clicks
-    p <- input$map_shape_click
-    print(p)
+  observeEvent(input$map_shape_click, {
+    rv$planning_area <- input$map_shape_click$id
+    print(rv$planning_area)
   })
+  
   
   observeEvent(input$close, {
     js$closeWindow()
