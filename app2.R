@@ -1,7 +1,7 @@
 packages <- c("shiny",  "ggplot2",  "tidyverse",  "shinydashboard",  "leaflet",
               "magrittr", "lubridate", "reshape", "tidyverse", "DT",  "knitr", 
               "corrplot", "sf", "tmap", "rgdal", "htmlwidgets", "terra", "janitor",
-              "RColorBrewer", "leaflet.extras")
+              "RColorBrewer", "leaflet.extras", "plotly")
 
 for (p in packages) {
   if (!require(p,  character.only = TRUE)) {
