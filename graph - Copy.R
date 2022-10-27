@@ -141,8 +141,8 @@ server <- function(input, output, session) {
       print(nonpara.model)
       cat("\n")
       cat('---------------------Pairwise Comparison---------------------n')
-      wilcox <- pairwise.wilcox.test(p$RecentCasesinCluster, p$PlanningArea)
-                                     #p.adjust.method = "BH")
+      wilcox <- pairwise.wilcox.test(p$RecentCasesinCluster, p$PlanningArea,
+                                     p.adjust.method = "BH")
       print(wilcox)
     })
       
