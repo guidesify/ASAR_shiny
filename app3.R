@@ -197,18 +197,24 @@ server <- function(input, output, session) {
     all_planning_area_cases_tib <- filtered_dengue %>% group_by(PlanningArea) %>% summarise(num_cases = sum(NumberofCases))
     all_planning_area_cases <- all_planning_area_cases_tib %>% as.data.frame()
     
+    all_PA_info <- merge(x=pop,y=all_planning_area_cases, by = 'PlanningArea', all.x=TRUE)
+    all_PA_info[is.na(all_PA_info)] = 0
+    print(all_PA_info)
+    
     print(all_planning_area_cases)
     
     #all_planning_area_cases[nrow(all_planning_area_cases) + 1,] <- c("NORTH-EASTERN ISLANDS", 0)
     
-    planning_area_cases <- all_planning_area_cases$num_cases[all_planning_area_cases$PlanningArea==rv$planning_area]
+    planning_area_cases <- all_PA_info$num_cases[all_PA_info$PlanningArea==rv$planning_area]
     print(planning_area_cases)
     #print(all_planning_area_cases)
+    
+    pal <- colorNumeric('YlOrRd', all_PA_info$num_cases)
     
     leafletProxy("map", data = filtered_dengue) %>%
     clearShapes() %>% clearHeatmap()  %>% addPolygons(data=planning_area_shape, layerId=~PLN_AREA_N, color='black',
                                                               weight=2, fillOpacity = 0.8,
-                                                              fillColor = ~colorNumeric("YlOrRd", all_planning_area_cases$num_cases)(all_planning_area_cases$num_cases[all_planning_area_cases$PlanningArea==PLN_AREA_N]),
+                                                              fillColor = ~pal(all_PA_info$num_cases[all_PA_info$PlanningArea==PLN_AREA_N]),
                                                               highlight = highlightOptions(weight = 5,
                                                                 color = "red",
                                                                 fillOpacity = 0.7,
