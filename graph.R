@@ -126,6 +126,8 @@ server <- function(input, output, session) {
             
         if (input$show == "Recent Cases") {
             p <- dengue_filtered() %>%
+                group_by(Date, ClusterNumber, PlanningArea) %>%
+                summarise(RecentCasesinCluster = max(RecentCasesinCluster)) %>%
                 group_by(Date) %>%
                 summarise(RecentCasesinCluster = sum(RecentCasesinCluster)) %>%
                 ggplot(., aes(x = Date, y = RecentCasesinCluster, text = paste("Date:", Date, "<br>Recent Cases:", scales::comma(RecentCasesinCluster), population_if_planning_area))) +
@@ -136,6 +138,8 @@ server <- function(input, output, session) {
                 theme(plot.title = element_text(hjust = 0.5))
         } else if (input$show == "Total Cases") {
             p <- dengue_filtered() %>%
+                group_by(Date, ClusterNumber, PlanningArea) %>%
+                summarise(TotalCasesinCluster = max(TotalCasesinCluster)) %>%
                 group_by(Date) %>%
                 summarise(TotalCasesinCluster = sum(TotalCasesinCluster)) %>%
                 ggplot(., aes(x = Date, y = TotalCasesinCluster, text = paste("Date:", Date, "<br>Total Cases:", scales::comma(TotalCasesinCluster), population_if_planning_area))) +
