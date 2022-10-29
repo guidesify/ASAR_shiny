@@ -86,7 +86,7 @@ ui <-
             sidebarLayout(
               sidebarPanel(
                 selectInput("show", "Show", 
-                            choices = c("Recent Cases", "Total Cases", "Number of Active Clusters", "Anova test"),
+                            choices = c("Recent Cases", "Total Cases", "Number of Active Clusters"),
                             selected = "Recent Cases"),
                 dateRangeInput("date", "Date Range", 
                                start = "2019-01-01", end = "2019-12-31", 
