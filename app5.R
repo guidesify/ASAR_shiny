@@ -141,9 +141,9 @@ ui <-
           tabsetPanel(
             sidebarLayout(
               sidebarPanel(
-                dateInput("date1", "Date", value = "2019-11-01", format = "yyyy-mm-dd", min = "2015-01-01", max = "2020-12-31"),
-                # Key in number of months to be added or subtracted from date1
-                numericInput("day1", "Number of Days Before/After", value = 90, min = 31, max = 730),      
+                      sliderInput("daterange2", "Date Range", min(dengue$Date),max(dengue$Date),
+                                  value = range(dengue$Date), step = 1
+                      ),     
                 selectInput("filterby3", "Filter by:", 
                             choices = c("Subzone", "Planning Area"),
                             selected = "Planning Area"),
@@ -352,7 +352,7 @@ server <- function(input, output, session) {
   #################### ANOVA TEST ############################
   dengue_anova <- reactive({
     data <- dengue %>%
-    filter(Date >= input$date1[1] & Date <= input$date1[1] + days(input$day1)) #%>%
+    filter(between(Date, input$daterange2[1], input$daterange2[2])) #%>%
     #group_by(Date) %>%
     # summarise(NumberofCases = sum(NumberofCases)) #%>%
     #complete(Date = seq.Date(from = input$date1[1], to = input$date1[1] + days(input$day1), by = "day")) %>%
