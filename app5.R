@@ -406,15 +406,15 @@ server <- function(input, output, session) {
     }     
     # nonpara.model <- kruskal.test(NumberofCases ~ input$filterby3, data = dengue_anova())
     print(nonpara.model)
-    # cat('----------------------------Pairwise Comparison----------------------------')
-    # cat("\n")
-    # if (input$filterby3 == "Subzone") {
-    #   pairwise.comparison <- pairwise.wilcox.test(NumberofCases ~ Subzone, data = dengue_anova(), p.adjust.method = "bonferroni")
-    # } else if (input$filterby3 == "Planning Area") {
-    #   pairwise.comparison <- pairwise.wilcox.test(NumberofCases ~ PlanningArea, data = dengue_anova(), p.adjust.method = "bonferroni")
-    # }
-    # # wilcox <- pairwise.wilcox.test(dengue$NumberofCases, dengue_anova$input$filterby3, p.adjust.method = "bonferroni")
-    # print(pairwise.comparison)
+    cat('----------------------------Pairwise Comparison----------------------------')
+    cat("\n")
+    if (input$filterby3 == "Subzone") {
+      pairwise.comparison <- pairwise.wilcox.test(dengue_anova()$NumberofCases, dengue_anova()$Subzone, dengue_anova.adjust.method = "BH")
+    } else if (input$filterby3 == "Planning Area") {
+      pairwise.comparison <- pairwise.wilcox.test(dengue_anova()$NumberofCases, dengue_anova()$PlanningArea, dengue_anova.adjust.method = "BH")
+    }
+    # wilcox <- pairwise.wilcox.test(dengue$NumberofCases, dengue_anova$input$filterby3, p.adjust.method = "bonferroni")
+    print(pairwise.comparison)
   })
   
   # Plot graph  on selection and sum up the cases by Date, set tooltip to text
