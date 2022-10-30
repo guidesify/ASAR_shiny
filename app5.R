@@ -151,7 +151,7 @@ ui <-
               ),        
               mainPanel(
                 h3("ANOVA based on Selected Filter"),       
-                p("This test is used to test if there is a significant difference between the means of two groups before and after a certain date"), 
+                # p("This test is used to test if there is a significant difference between the means of two groups before and after a certain date"), 
                 fluidRow(
                   #display the results based on the filterby3 input
                   verbatimTextOutput("anova"),
@@ -352,20 +352,29 @@ server <- function(input, output, session) {
   #################### ANOVA TEST ############################
   dengue_anova <- reactive({
     data <- dengue %>%
-    filter(Date >= input$date1[1] & Date <= input$date1[1] + days(input$day1)) %>%
+    filter(Date >= input$date1[1] & Date <= input$date1[1] + days(input$day1)) #%>%
+    #group_by(Date) %>%
+    # summarise(NumberofCases = sum(NumberofCases)) #%>%
+    #complete(Date = seq.Date(from = input$date1[1], to = input$date1[1] + days(input$day1), by = "day")) %>%
+    #replace_na(list(NumberofCases = 0))
+    
+
     # filter by filterby selection
-    filter(if (input$filterby3 == "Subzone") {
-      Subzone == input$subzone3 | input$subzone3 == "ALL"
-    } else if (input$filterby3 == "Planning Area") {
-      PlanningArea == input$planningarea3 | input$planningarea3 == "ALL"
-    }) %>%
-      group_by(Date) %>% 
-      summarise(NumberofCases = sum(NumberofCases)) %>%
-      complete(Date = seq.Date(from = input$date1[1], to = input$date1[1] + days(input$day1), by = "day")) %>%
-      replace_na(list(NumberofCases = 0))
+    # filter(if (input$filterby3 == "Subzone") {
+    #   Subzone == input$subzone3 | input$subzone3 == "ALL"
+    # } else if (input$filterby3 == "Planning Area") {
+    #   PlanningArea == input$planningarea3 | input$planningarea3 == "ALL"
+    # }) %>%
+      # group_by(Date) %>% 
+      # summarise(NumberofCases = sum(NumberofCases)) %>%
+      # complete(Date = seq.Date(from = input$date1[1], to = input$date1[1] + days(input$day1), by = "day")) %>%
+      # replace_na(list(NumberofCases = 0))
   })
 
+
   output$anova <- renderPrint({
+
+    print(dengue_anova())
     cat('---------------------Test for Homogeneity of Variances---------------------')
     cat("\n")
     # Test for Homogeneity of Variances (Levene's Test) based on either filterby3 selection
@@ -397,15 +406,15 @@ server <- function(input, output, session) {
     }     
     # nonpara.model <- kruskal.test(NumberofCases ~ input$filterby3, data = dengue_anova())
     print(nonpara.model)
-    cat('----------------------------Pairwise Comparison----------------------------')
-    cat("\n")
-    if (input$filterby3 == "Subzone") {
-      pairwise.comparison <- pairwise.wilcox.test(NumberofCases ~ Subzone, data = dengue_anova(), p.adjust.method = "bonferroni")
-    } else if (input$filterby3 == "Planning Area") {
-      pairwise.comparison <- pairwise.wilcox.test(NumberofCases ~ PlanningArea, data = dengue_anova(), p.adjust.method = "bonferroni")
-    }
-    # wilcox <- pairwise.wilcox.test(dengue$NumberofCases, dengue_anova$input$filterby3, p.adjust.method = "bonferroni")
-    print(pairwise.comparison)
+    # cat('----------------------------Pairwise Comparison----------------------------')
+    # cat("\n")
+    # if (input$filterby3 == "Subzone") {
+    #   pairwise.comparison <- pairwise.wilcox.test(NumberofCases ~ Subzone, data = dengue_anova(), p.adjust.method = "bonferroni")
+    # } else if (input$filterby3 == "Planning Area") {
+    #   pairwise.comparison <- pairwise.wilcox.test(NumberofCases ~ PlanningArea, data = dengue_anova(), p.adjust.method = "bonferroni")
+    # }
+    # # wilcox <- pairwise.wilcox.test(dengue$NumberofCases, dengue_anova$input$filterby3, p.adjust.method = "bonferroni")
+    # print(pairwise.comparison)
   })
   
   # Plot graph  on selection and sum up the cases by Date, set tooltip to text

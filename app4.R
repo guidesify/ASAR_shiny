@@ -360,7 +360,7 @@ server <- function(input, output, session) {
       PlanningArea == input$planningarea3 | input$planningarea3 == "ALL"
     }) %>%
       group_by(Date) %>% 
-      summarise(NumberofCases = sum(NumberofCases)) %>%
+      # summarise(NumberofCases = sum(NumberofCases)) %>%
       complete(Date = seq.Date(from = input$date1[1], to = input$date1[1] + days(input$day1), by = "day")) %>%
       replace_na(list(NumberofCases = 0))
   })
