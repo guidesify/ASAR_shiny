@@ -224,7 +224,6 @@ server <- function(input, output, session) {
   })
   
   observe({
-    #pal <- colorpal()
     filtered_dengue <- filteredData()
     
     all_planning_area_cases_tib <- filtered_dengue %>% group_by(PlanningArea) %>% summarise(num_cases = sum(NumberofCases))
@@ -232,29 +231,35 @@ server <- function(input, output, session) {
     
     all_PA_info <- merge(x=pop,y=all_planning_area_cases, by = 'PlanningArea', all.x=TRUE)
     all_PA_info[is.na(all_PA_info)] = 0
-    print(all_PA_info)
+    #print(range(all_PA_info$num_cases))
     
-    print(all_planning_area_cases)
-    
-    #all_planning_area_cases[nrow(all_planning_area_cases) + 1,] <- c("NORTH-EASTERN ISLANDS", 0)
-    
-    planning_area_cases <- all_PA_info$num_cases[all_PA_info$PlanningArea==rv$planning_area]
-    print(planning_area_cases)
     #print(all_planning_area_cases)
     
-    pal <- colorNumeric('YlOrRd', all_PA_info$num_cases)
+    #planning_area_cases <- all_PA_info$num_cases[all_PA_info$PlanningArea==rv$planning_area]
+    #print(all_PA_info$num_cases[all_PA_info$PlanningArea==rv$planning_area])
+    
+    planning_area_shape_new <- merge(planning_area_shape, all_PA_info, by.x='PLN_AREA_N', by.y='PlanningArea')
+    
+    pal <- colorNumeric('YlOrRd', range(all_PA_info$num_cases))
     
     leafletProxy("map", data = filtered_dengue) %>%
-    clearShapes() %>% clearHeatmap()  %>% addPolygons(data=planning_area_shape, layerId=~PLN_AREA_N, color='black',
+    clearShapes() %>% clearHeatmap() %>% clearControls()  %>% addPolygons(data=planning_area_shape_new, layerId=~PLN_AREA_N, color='black',
                                                               weight=2, fillOpacity = 0.8,
-                                                              fillColor = ~pal(all_PA_info$num_cases[all_PA_info$PlanningArea==PLN_AREA_N]),
+                                                              fillColor = ~pal(num_cases),
                                                               highlight = highlightOptions(weight = 5,
                                                                 color = "red",
                                                                 fillOpacity = 0.7,
                                                                 bringToFront = TRUE),
                                                               label=~PLN_AREA_N,
                                                               popup=~paste("Planning Area: ", PLN_AREA_N, "<br>",
-                                                                           "Number of Cases:", planning_area_cases), group="Planning Area") %>%
+                                                                           "Number of Cases:", num_cases), group="Planning Area") %>%
+      addLegend(
+        position = "bottomleft",
+        pal = pal,
+        values = all_PA_info$num_cases,
+        title = "Number of Cases",
+        group ="Planning Area"
+      ) %>% 
       addHeatmap(lng = ~Longitude, lat = ~Latitude, blur=20, radius=10, minOpacity=0.5, group="Heatmap") %>%
       addLayersControl(baseGroups = c("Planning Area", "Heatmap"), position = "bottomright", 
                                       options = layersControlOptions(collapsed = FALSE))
