@@ -82,7 +82,8 @@ ui <-
         ),
         tabItem(
           tabName = 'Map', 
-          titlePanel('Map'),
+          titlePanel('Dengue Cases per Planning Area of Singapore'),
+          p("In this map, you can click on the different planning areas to find the total number of Dengue cases within a certain date range."),
           tabsetPanel(
           fluidRow(
                     column(6,
@@ -109,7 +110,8 @@ ui <-
         #################### Graph tab ####################
         tabItem(
           tabName='Graph',
-          titlePanel('Graph'),
+          titlePanel('Graph of Recent Cases'),
+          p("Here, you can visualize the number of cases given a set of filters, such as, date range, subzone, planning area, region or land use."),
           tabsetPanel(
             sidebarLayout(
               sidebarPanel(
@@ -168,6 +170,7 @@ ui <-
           tabsetPanel(
             sidebarLayout(
               sidebarPanel(
+                      h3("Filter ANOVA Test By:"),
                       sliderInput("daterange2", "Date Range", min(dengue$Date),max(dengue$Date),
                                   value = range(dengue$Date), step = 1
                       ),     
@@ -177,11 +180,12 @@ ui <-
   
               ),        
               mainPanel(
-                h3("ANOVA based on Selected Filter"),       
+                h3("ANOVA Results"),       
                 # p("This test is used to test if there is a significant difference between the means of two groups before and after a certain date"), 
                 fluidRow(
                   #display the results based on the filterby3 input
                   verbatimTextOutput("anova"),
+                  tableOutput("anova_table")
                 )
               )
             )
@@ -190,10 +194,12 @@ ui <-
         #################### Paired T-test tab ####################
         tabItem(
           tabName='PairedTtest',
-          titlePanel('Paired T-Test'),
+          titlePanel('Paired T-Test to Test Before and After a Certain Date'),
+          p("This test is used to test if there is a significant difference between the means of two groups before and after a certain date."),
           tabsetPanel(
             sidebarLayout(
               sidebarPanel(
+                  h3("Set Dates to Compare and Filters:"),
                   dateInput("date1", "Date", value = "2019-11-01", format = "yyyy-mm-dd", min = "2015-01-01", max = "2020-12-31"),
                   # Key in number of months to be added or subtracted from date1
                   numericInput("day1", "Number of Days Before/After", value = 90, min = 31, max = 730),      
@@ -214,14 +220,13 @@ ui <-
                   )
               ),
               mainPanel(
-                h3("Paired T-Test to test before and after a certain date"),
-                p("This test is used to test if there is a significant difference between the means of two groups before and after a certain date"),
+                h3("Paired T-Test Result:"),
                 verbatimTextOutput("ttest"),
+                h3("Graph Comparing Before and After Number of Cases"),
                 fluidRow(
                   plotOutput("ttest_compare")
                 )
               )
-              
             )
             )
           )
@@ -370,7 +375,7 @@ server <- function(input, output, session) {
       size = 3,
       shape = 24,
       fill = "red"
-    )
+    ) + scale_x_discrete(name="Date Range",labels=c("before_data" = "Before", "after_data" = "After")) + scale_y_continuous(name="Number of Cases")
 
     
   })
@@ -421,8 +426,7 @@ server <- function(input, output, session) {
       # complete(Date = seq.Date(from = input$date1[1], to = input$date1[1] + days(input$day1), by = "day")) %>%
       # replace_na(list(NumberofCases = 0))
   })
-
-
+  
   output$anova <- renderPrint({
 
     print(dengue_anova())
