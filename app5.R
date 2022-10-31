@@ -1,7 +1,7 @@
 packages <- c("shiny",  "ggplot2",  "tidyverse",  "shinydashboard",  "leaflet",
               "magrittr", "lubridate", "reshape", "tidyverse", "DT",  "knitr", 
               "corrplot", "sf", "tmap", "rgdal", "htmlwidgets", "terra", "janitor",
-              "RColorBrewer", "leaflet.extras", "plotly", "car", "PairedData")
+              "RColorBrewer", "leaflet.extras", "plotly", "car", "PairedData", "sm", "gdata")
 
 for (p in packages) {
   if (!require(p,  character.only = TRUE)) {
@@ -44,6 +44,7 @@ ui <-
     dashboardHeader(),
     sidebar <- dashboardSidebar(
       sidebarMenu(
+        menuItem("Home", tabName="Home"),
         menuItem("Map", tabName="Map"),
         menuItem("Graph",tabName="Graph"),
         menuItem("ANOVA",tabName="ANOVA"),
@@ -53,6 +54,32 @@ ui <-
     dashboardBody(
       tags$head(tags$style("section.content { overflow-y: hidden; }")),
       tabItems(
+        tabItem(
+          tabName = 'Home', 
+          titlePanel('Home'),
+          fluidPage(
+            fluidRow(
+              h3(strong("Exploring Dengue Cluster Data"))
+            ),
+            fluidRow(
+              column(6,
+               p(style="text-align: justify; font-size = 25px",
+                 "Dengue Fever and Dengue Haemorrhagic Fever are two diseases caused by 4 closely related Dengue viruses that belonged to the genus Flavivirus. The diseases are transmitted predominantly by the Ades aegypti mosquito with no known vaccines. Dengue is prevalent in tropical and subtropical areas of the world, including Singapore, and the World Health Organization had estimated up to 50-100 million infections annual, which puts half of the world population at risk."
+               ),
+               p(style="text-align: justify; font-size = 25px", 
+                 "In Singapore, Dengue first appeared in 1960 and quickly became a major health concern, with it being a large contributor to childhood deaths . From 1966 to 1968, a vector control system, where the thrust was to control the Aedes Mosquito population, was implemented. The study “Dengue Prevention and 35 Years of Vector Control in Singapore” found that for the vector control system to be effective, it had to be based on carefully collected and analysed epidemiologic and entomologic surveillance data, with a particular emphasis on ecological factors to determine the time and spatial factors to initial vector control."),
+               p(style="text-align: justify; font-size = 25px",
+                 "In 2020, Singapore saw one of its worst Dengue outbreaks with the cumulative number of Dengue cases coming up to 32,000  (as of 19 October 2020). The study “Geographical Clusters of Dengue Outbreak in Singapore during the Covid-19 Nationwide Lockdown of 2020”   found that one of the factors that may have contributed to the worsening outbreak was the COVID-19 management measures, which saw an unprecedented proportion of people staying at home. Upon evaluation, it was concluded that beyond the entomological factors, extraneous factors, like government policies, had to be considered in studying the epidemiology."),
+               
+               hr()
+              ),
+              column(
+                6, 
+                img(src='dengue.jpg',height="100%", width="100%", align="right"),
+              )
+            )
+          )
+        ),
         tabItem(
           tabName = 'Map', 
           titlePanel('Map'),
@@ -191,7 +218,6 @@ ui <-
                 p("This test is used to test if there is a significant difference between the means of two groups before and after a certain date"),
                 verbatimTextOutput("ttest"),
                 fluidRow(
-                  plotOutput("ttest_boxplot"),
                   plotOutput("ttest_compare")
                 )
               )
@@ -328,15 +354,26 @@ server <- function(input, output, session) {
       replace_na(list(NumberofCases = 0))
   })
   
-  output$ttest_boxplot <- renderPlot({
+  output$ttest_compare <- renderPlot({
     before_data <- dengue_filtered2_before()
     print(before_data)
     after_data <- dengue_filtered2_after()
     print(after_data)
-    boxplot(before_data$NumberofCases, after_data$NumberofCases, names=c("Before", "After"), ylab="Number of Cases")
+    combined <- combine(before_data, after_data)
+    print(combined)
+    #boxplot(before_data$NumberofCases, after_data$NumberofCases, names=c("Before", "After"), ylab="Number of Cases")
+    #sm.density.compare(combined$NumberofCases, combined$source)
+    ggplot(combined[which(combined$NumberofCases > 0,),], aes(x=source, y=NumberofCases)) + geom_point() + geom_boxplot() + stat_summary(
+      geom = "point",
+      fun.y = "mean",
+      col = "black",
+      size = 3,
+      shape = 24,
+      fill = "red"
+    )
+
     
   })
-
   output$ttest <- renderPrint({
     data1 <- dengue_filtered2_before()
     data2 <- dengue_filtered2_after()
