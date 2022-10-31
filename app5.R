@@ -1,7 +1,7 @@
 packages <- c("shiny",  "ggplot2",  "tidyverse",  "shinydashboard",  "leaflet",
               "magrittr", "lubridate", "reshape", "tidyverse", "DT",  "knitr", 
               "corrplot", "sf", "tmap", "rgdal", "htmlwidgets", "terra", "janitor",
-              "RColorBrewer", "leaflet.extras", "plotly", "car")
+              "RColorBrewer", "leaflet.extras", "plotly", "car", "PairedData")
 
 for (p in packages) {
   if (!require(p,  character.only = TRUE)) {
@@ -189,8 +189,13 @@ ui <-
               mainPanel(
                 h3("Paired T-Test to test before and after a certain date"),
                 p("This test is used to test if there is a significant difference between the means of two groups before and after a certain date"),
-                verbatimTextOutput("ttest")
+                verbatimTextOutput("ttest"),
+                fluidRow(
+                  plotOutput("ttest_boxplot"),
+                  plotOutput("ttest_compare")
+                )
               )
+              
             )
             )
           )
@@ -231,12 +236,6 @@ server <- function(input, output, session) {
     
     all_PA_info <- merge(x=pop,y=all_planning_area_cases, by = 'PlanningArea', all.x=TRUE)
     all_PA_info[is.na(all_PA_info)] = 0
-    #print(range(all_PA_info$num_cases))
-    
-    #print(all_planning_area_cases)
-    
-    #planning_area_cases <- all_PA_info$num_cases[all_PA_info$PlanningArea==rv$planning_area]
-    #print(all_PA_info$num_cases[all_PA_info$PlanningArea==rv$planning_area])
     
     planning_area_shape_new <- merge(planning_area_shape, all_PA_info, by.x='PLN_AREA_N', by.y='PlanningArea')
     
@@ -328,6 +327,15 @@ server <- function(input, output, session) {
       complete(Date = seq.Date(from = input$date1[1], to = input$date1[1] + days(input$day1), by = "day")) %>%
       replace_na(list(NumberofCases = 0))
   })
+  
+  output$ttest_boxplot <- renderPlot({
+    before_data <- dengue_filtered2_before()
+    print(before_data)
+    after_data <- dengue_filtered2_after()
+    print(after_data)
+    boxplot(before_data$NumberofCases, after_data$NumberofCases, names=c("Before", "After"), ylab="Number of Cases")
+    
+  })
 
   output$ttest <- renderPrint({
     data1 <- dengue_filtered2_before()
@@ -346,6 +354,7 @@ server <- function(input, output, session) {
       cat("The number of cases in the second period is not significantly lower than the number of cases in the first period.")
     }
   }) 
+  
 #################### END OF T TEST ############################
 
   
